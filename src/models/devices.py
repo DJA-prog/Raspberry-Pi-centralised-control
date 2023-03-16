@@ -1,4 +1,4 @@
-import mysql.connector
+import csv
 
 
 """
@@ -6,4 +6,5 @@ import mysql.connector
 """
 class Model1:
     def __init__(self):
+        # self.devices_list = 
         pass
