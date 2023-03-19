@@ -27,6 +27,7 @@ class HomeView(tk.Tk, View):
         ["Student05", "unknown"],
         ["Student06", "unknown"]
     ]
+    
     applications_data = [
         ["Remmina", "inactive"],
         ["TypeSpeed", "inactive"],
@@ -34,13 +35,21 @@ class HomeView(tk.Tk, View):
         ["Firefox", "inactive"],
         ["LibreOffice", "inactive"]
     ]
+
     controls = ["EXIT", "REFRESH", "RESTART ALL",
                 "SHUTDOWN ALL", "START DEFAULT"]
+    
     device_info_data = [
         ["Hostname", "wordpropi01"],
         ["IP", "192.168.1.1"],
         ["Username", "pi"],
         ["Status", "Offline"]
+    ]
+
+    device_controls = [
+        ["SHUTDOWN", "active"],
+        ["RESTART", "active"],
+        ["DEFAULT (remmina)", "inactive"]
     ]
     
     #-----------------------------------------------------------------------
@@ -59,8 +68,8 @@ class HomeView(tk.Tk, View):
         self._make_devices_panel()
         self._make_device_controls()
         self._make_control_ribbon()
-        self._make_applications_panel()
-        self._make_device()
+        self._make_applications_panel() # update on device change
+        self._make_device() # update on device change
         
     
     #-----------------------------------------------------------------------
@@ -328,6 +337,26 @@ class HomeView(tk.Tk, View):
 
         for info in self.device_info_data:
             treeView.insert('', "end", values=info)
+
+        # frame in device info
+        device_control = tk.Frame(device_info, # location
+                                relief="flat",  # border type
+                                borderwidth=0,  # border width
+                                pady=4)  # padding top and bottom
+        device_control.pack(side="top", fill='x')
+
+        # add buttons in device control
+        for control in self.device_controls:
+            control_btn = tk.Button(device_control,  # location
+                                    cursor="hand2",  # cursor type
+                                    text=control[0],  # button text
+                                    width=10,  # width
+                                    padx=1)  # padding left and right
+
+            control_btn.pack(side="right",
+                             fill="both",
+                             expand="yes")
+                                  
 
         # frame in device_control under device info
         app_info = tk.Frame(self.device_panel,  # location
