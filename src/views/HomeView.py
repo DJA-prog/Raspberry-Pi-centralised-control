@@ -72,7 +72,7 @@ class HomeView(tk.Tk, View):
 
  # create self / main
     def _make_base(self):
-        self.title("Window Title")
+        self.title("Raspberry Pi Centralised Control")
         self.geometry(self.window_dim)
         self.config(bg="#e1341e")
 
