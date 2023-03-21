@@ -47,9 +47,9 @@ class HomeController(Controller):
         elif (code == "REFRESH"):
             self.devices.update_devices_csv()
         elif (code == "RESTART ALL"):
-            pass
+            self.devices.restart_all()
         elif (code == "SHUTDOWN ALL"):
-            pass
+            self.devices.shutdown_all()
         elif (code == "START DEFAULT"):
             pass
     

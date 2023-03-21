@@ -60,7 +60,22 @@ class Devices:
 
         print("Updated devices csv")
 
+    def restart_all(self):
+        with open(self.devices_csv, 'r') as csvfile:
+            devices_list = csv.DictReader(csvfile, delimiter=',', quotechar='|')
 
+            for line in devices_list:
+                if line["exempted"] == "false" and self.scanModel.is_device_online(line["hostname"]):
+                    self.scanModel.execute_remote_command(line["hostname"], line["username"], line["password"], "sudo reboot & exit")
+
+    def shutdown_all(self):
+        with open(self.devices_csv, 'r') as csvfile:
+            devices_list = csv.DictReader(csvfile, delimiter=',', quotechar='|')
+
+            for line in devices_list:
+                if line["exempted"] == "false" and self.scanModel.is_device_online(line["hostname"]):
+                    self.scanModel.execute_remote_command(line["hostname"], line["username"], line["password"], "sudo shutdown now & exit")
+                
 
     def get_devices_status_list(self):
         with open(self.devices_csv, 'r') as csvfile:
@@ -107,11 +122,6 @@ class Devices:
             ]
 
         return self.device_info_data
-
-    # ["Hostname", "wordpropi01"],
-    # ["IP", "192.168.1.1"],
-    # ["Username", "pi"],
-    # ["Status", "Offline"]
 
     def notify_exit(self):
         # Perform any necessary cleanup tasks here
