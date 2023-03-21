@@ -1,4 +1,6 @@
+import os
 from config import APP_PATH
+from models.Scan import Scan
 import csv
 
 
@@ -16,8 +18,48 @@ class Devices:
 
 
     def __init__(self):
-        # self.devices_list =
+        self.scanModel = Scan()
         pass
+
+    def update_devices_csv(self):
+        print("Updating devices csv")
+
+        # Create a temporary file for writing the updated CSV data
+        temp_file = self.devices_csv + ".tmp"
+
+        # Open the input CSV file for reading
+        with open(self.devices_csv, 'r') as csv_in_file:
+            # Open the temporary file for writing
+            with open(temp_file, 'w', newline='') as csv_out_file:
+                # Create a CSV reader object
+                csv_reader = csv.reader(csv_in_file, delimiter=',', quotechar='|')
+
+                # Create a CSV writer object
+                csv_writer = csv.writer(csv_out_file, delimiter=',', quotechar='|')
+
+                # Loop through each row in the CSV file
+                for row in csv_reader:
+                    print(row[0])
+
+                    # Update the row as needed
+                    if row[0] != "id":
+                        host_check = self.scanModel.check_host(row[2])
+                        row[3] = host_check[1]  # set ip
+                        if host_check[0]:
+                            row[7] = "online"
+                        elif not host_check[0]:
+                            row[7] = "offline"
+                        else:
+                            row[7] = "unknown"
+
+                    # Write the updated row to the temporary file
+                    csv_writer.writerow(row)
+
+        # Replace the input CSV file with the temporary file
+        os.replace(temp_file, self.devices_csv)
+
+        print("Updated devices csv")
+
 
 
     def get_devices_status_list(self):
@@ -70,3 +112,11 @@ class Devices:
     # ["IP", "192.168.1.1"],
     # ["Username", "pi"],
     # ["Status", "Offline"]
+
+    def notify_exit(self):
+        # Perform any necessary cleanup tasks here
+        # ...
+
+        # Exit the program
+        import sys
+        sys.exit()

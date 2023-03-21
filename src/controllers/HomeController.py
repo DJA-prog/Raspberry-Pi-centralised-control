@@ -40,6 +40,22 @@ class HomeController(Controller):
 
     def getDeviceInfo(self, device_id):
         return self.devices.get_device_info(device_id)
+    
+    def ribbonControl(self, code):
+        if (code == "EXIT"):
+            self.exit_application()
+        elif (code == "REFRESH"):
+            self.devices.update_devices_csv()
+        elif (code == "RESTART ALL"):
+            pass
+        elif (code == "SHUTDOWN ALL"):
+            pass
+        elif (code == "START DEFAULT"):
+            pass
+    
+    def exit_application(self):
+        self.devices.notify_exit()
+        self.homeView.close()
 
     """
         @Override

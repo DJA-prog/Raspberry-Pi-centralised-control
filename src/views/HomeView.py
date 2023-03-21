@@ -38,8 +38,7 @@ class HomeView(tk.Tk, View):
         ["LibreOffice", "inactive"]
     ]
 
-    controls = ["EXIT", "REFRESH", "RESTART ALL",
-                "SHUTDOWN ALL", "START DEFAULT"]
+    controls = ["EXIT", "REFRESH", "RESTART ALL", "SHUTDOWN ALL", "START DEFAULT"]
     
     device_info_data = [
         # ["Hostname", "wordpropi01"],
@@ -102,7 +101,7 @@ class HomeView(tk.Tk, View):
         self.geometry(self.window_dim)
         self.config(bg="#e1341e")
 
-
+    # inside of self / main
     def _make_devices_panel(self):
         devices_panel_width = self.window_width * 0.2
         devices_panel_height = self.window_height * 1
@@ -201,7 +200,6 @@ class HomeView(tk.Tk, View):
                                        width=self.device_controls_width,
                                        height=self.device_controls_height)
         self.device_control.pack(side="right", fill="both", expand=True)
-
 
     # inside of device control
     def _make_device_application_panel(self):
@@ -310,7 +308,8 @@ class HomeView(tk.Tk, View):
                                     cursor="hand2",  # cursor type
                                     text=control,  # button text
                                     width=10,  # width
-                                    padx=1)  # padding left and right
+                                    padx=1,  # padding left and right
+                                    command=lambda x=control: self.homeController.ribbonControl(x))
             if control == "EXIT":
                 control_btn.config(bg="red")
 
@@ -406,6 +405,8 @@ class HomeView(tk.Tk, View):
     def main(self):
         self.mainloop()
         
+    # def exit_application(self):
+    #     self.destroy()
     """
     @Overrite
     """
