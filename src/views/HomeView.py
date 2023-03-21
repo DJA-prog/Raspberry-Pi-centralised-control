@@ -19,16 +19,18 @@ class HomeView(tk.Tk, View):
     window_height = 600
     window_dim = str(window_width) + "x" + str(window_height)
 
+    current_device_id = 0
+
     devices_data = [
-        ["Student01", "unknown"],
-        ["Student02", "unknown"],
-        ["Student03", "unknown"],
-        ["Student04", "unknown"],
-        ["Student05", "unknown"],
-        ["Student06", "unknown"]
+        # [1, "Student01", "unknown"],
+        # [2, "Student02", "unknown"],
+        # [3, "Student03", "unknown"],
+        # [4, "Student04", "unknown"],
+        # [5, "Student05", "unknown"],
+        # [6, "Student06", "unknown"]
     ]
     
-    applications_data = [
+    device_application_data = [
         ["Remmina", "inactive"],
         ["TypeSpeed", "inactive"],
         ["Chrome", "inactive"],
@@ -40,10 +42,10 @@ class HomeView(tk.Tk, View):
                 "SHUTDOWN ALL", "START DEFAULT"]
     
     device_info_data = [
-        ["Hostname", "wordpropi01"],
-        ["IP", "192.168.1.1"],
-        ["Username", "pi"],
-        ["Status", "Offline"]
+        # ["Hostname", "wordpropi01"],
+        # ["IP", "192.168.1.1"],
+        # ["Username", "pi"],
+        # ["Status", "Offline"]
     ]
 
     device_controls = [
@@ -62,13 +64,16 @@ class HomeView(tk.Tk, View):
         super().__init__()
         # self.attributes('-fullscreen', True)
         self.homeController = controller
+
+        # get data
+        self.current_device_id = self.homeController.getCurrentDeviceId()
         
         # order of window building
         self._make_base()
         self._make_devices_panel()
         self._make_device_controls()
         self._make_control_ribbon()
-        self._make_applications_panel() # update on device change
+        self._make_device_application_panel() # update on device change
         self._make_device() # update on device change
         
     
@@ -78,17 +83,33 @@ class HomeView(tk.Tk, View):
     """
         Creates view's frame.
     """
+    # Experimental refresh method
+    # def refresh(self):
+    #     self.destroy()
+    #     self.__init__()
 
- # create self / main
+    # def update(self):
+    #     tk.update(self)
+    
+    def setDeviceId(self, device_id):
+        self.current_device_id = device_id
+        self.homeController.setCurrentDeviceId(device_id)
+        print(f"Set current device id: {self.current_device_id}")
+
+    # create self / main
     def _make_base(self):
         self.title("Raspberry Pi Centralised Control")
         self.geometry(self.window_dim)
         self.config(bg="#e1341e")
 
-    # inside of self / main
+
     def _make_devices_panel(self):
         devices_panel_width = self.window_width * 0.2
         devices_panel_height = self.window_height * 1
+
+        # get data
+        self.devices_data = self.homeController.getDevices()
+
         # frame in root/self
         self.devices_panel = tk.Frame(self,
                                       border=4,
@@ -152,12 +173,13 @@ class HomeView(tk.Tk, View):
         for device in self.devices_data:
             device_btn = tk.Button(devices,
                                    cursor="hand2",  # cursor type
-                                   text=device[0],
-                                   width=15)
+                                   text=device[1],
+                                   width=15,
+                                   command=lambda id=device[0]: self.setDeviceId(id))
 
-            if device[1] == "online":
+            if device[2] == "online":
                 device_btn.config(bg="green")
-            elif device[1] == "offline":
+            elif device[2] == "offline":
                 device_btn.config(bg="red")
             else:
                 device_btn.config(bg="blue")
@@ -180,22 +202,23 @@ class HomeView(tk.Tk, View):
                                        height=self.device_controls_height)
         self.device_control.pack(side="right", fill="both", expand=True)
 
+
     # inside of device control
-    def _make_applications_panel(self):
-        applications_panel_width = self.device_controls_width * 0.25
-        applications_panel_height = self.device_controls_height * 1
+    def _make_device_application_panel(self):
+        device_application_panel_width = self.device_controls_width * 0.25
+        device_application_panel_height = self.device_controls_height * 1
         # frame in device_controls
-        self.applications_panel = tk.Frame(self.device_control,  # location
+        self.device_application_panel = tk.Frame(self.device_control,  # location
                                            border=4,
                                            #   cursor="hand2", # cursor type
-                                           width=applications_panel_width,  # panel width
-                                           height=applications_panel_height,  # panel height
+                                           width=device_application_panel_width,  # panel width
+                                           height=device_application_panel_height,  # panel height
                                            relief="flat",  # border type
                                            borderwidth=0)  # border width
-        self.applications_panel.pack(side="right", fill='y')
+        self.device_application_panel.pack(side="right", fill='y')
 
-        # Label at the top in applications panel
-        applications_panel_label = tk.Label(self.applications_panel,  # location
+        # Label at the top in device_application panel
+        device_application_panel_label = tk.Label(self.device_application_panel,  # location
                                             cursor="arrow",  # cursor type
                                             text="APPLICATIONS",  # label text
                                             font=["Arial", 14],  # font
@@ -203,51 +226,51 @@ class HomeView(tk.Tk, View):
                                             borderwidth=2,  # border width
                                             padx=5,  # x sides padding
                                             pady=5)  # y sides padding
-        applications_panel_label.config(
+        device_application_panel_label.config(
             anchor="center")  # centers the label text
-        applications_panel_label.pack(side="top", fill='x')
+        device_application_panel_label.pack(side="top", fill='x')
 
-        # frame bellow applications label
-        applications_content = tk.LabelFrame(self.applications_panel,
-                                             width=applications_panel_width,
-                                             height=applications_panel_height)
-        applications_content.pack()
+        # frame bellow device_application label
+        device_application_content = tk.LabelFrame(self.device_application_panel,
+                                             width=device_application_panel_width,
+                                             height=device_application_panel_height)
+        device_application_content.pack()
 
-        # canvas in applications content
-        applications_list = tk.Canvas(applications_content,
-                                      width=applications_panel_width,
-                                      height=applications_panel_height)
-        applications_list.pack(side="left",
+        # canvas in device_application content
+        device_application_list = tk.Canvas(device_application_content,
+                                      width=device_application_panel_width,
+                                      height=device_application_panel_height)
+        device_application_list.pack(side="left",
                                fill="both",
                                expand="yes")
 
         # intialize scrollbar
-        yscrollbar = ttk.Scrollbar(applications_content,
+        yscrollbar = ttk.Scrollbar(device_application_content,
                                    orient="vertical",
-                                   command=applications_list.yview)
+                                   command=device_application_list.yview)
         yscrollbar.pack(side="right", fill="y")
 
         # configure
-        applications_list.configure(yscrollcommand=yscrollbar.set)
+        device_application_list.configure(yscrollcommand=yscrollbar.set)
 
         # e: pass event
-        applications_list.bind("<Configure>",
-                               lambda e: applications_list.configure(
-                                   scrollregion=applications_list.bbox("all")))
+        device_application_list.bind("<Configure>",
+                               lambda e: device_application_list.configure(
+                                   scrollregion=device_application_list.bbox("all")))
 
-        # frame in applications lists
-        applications = tk.Frame(applications_list,
-                                width=applications_panel_width,
-                                height=applications_panel_height)
+        # frame in device_application lists
+        device_application = tk.Frame(device_application_list,
+                                width=device_application_panel_width,
+                                height=device_application_panel_height)
 
-        # window in applications
-        applications_list.create_window((0, 0),
-                                        window=applications,  # where in to create the scrollable window
+        # window in device_application
+        device_application_list.create_window((0, 0),
+                                        window=device_application,  # where in to create the scrollable window
                                         anchor="nw")  # basically makes the scroll start at the top
 
-        # add buttons in applications in applications list in applications content
-        for application in self.applications_data:
-            app_btn = tk.Button(applications,
+        # add buttons in device_application in device_application list in device_application content
+        for application in self.device_application_data:
+            app_btn = tk.Button(device_application,
                                 cursor="hand2",  # cursor type
                                 text=application[0],
                                 width=15)
@@ -299,6 +322,10 @@ class HomeView(tk.Tk, View):
     def _make_device(self):
         device_panel_width = self.device_controls_width * 0.75
         device_panel_height = self.device_controls_height * 0.9
+
+        # get data
+        self.device_info_data = self.homeController.getDeviceInfo(self.current_device_id)
+
         # frame in device_control
         self.device_panel = tk.Frame(self.device_control,  # location
                                      border=4,

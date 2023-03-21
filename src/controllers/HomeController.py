@@ -1,21 +1,46 @@
 # -*- encoding:utf-8 -*-
-from core.Controller import Controller
+from core.Core import Core # opens other controllers
+from core.Controller import Controller # opens other views
+from models.Devices import Devices
 
 
 """
     Main controller. It will be responsible for program's main screen behavior.
 """
 class HomeController(Controller):
+
+    current_device_id = 0
+    device_info_data = []
+
     #-----------------------------------------------------------------------
     #        Constructor
     #-----------------------------------------------------------------------
     def __init__(self):
+        self.devices = Devices()
+        self.core = Core()
+        self.current_device_id = self.devices.get_first_device_id()
+
+        # load homeView after
         self.homeView = self.loadView("Home")
-    
-    
+
+        # self.homeView.devices_data = self.devices.get_devices_status_list()
+
     #-----------------------------------------------------------------------
     #        Methods
     #-----------------------------------------------------------------------
+    def getDevices(self):
+        data = self.devices.get_devices_status_list()
+        return data
+    
+    def getCurrentDeviceId(self):
+        return self.current_device_id
+    
+    def setCurrentDeviceId(self, device_id):
+        self.current_device_id = device_id
+
+    def getDeviceInfo(self, device_id):
+        return self.devices.get_device_info(device_id)
+
     """
         @Override
     """
