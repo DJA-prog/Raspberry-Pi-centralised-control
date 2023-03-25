@@ -45,6 +45,8 @@ class HomeController(Controller):
         if (code == "EXIT"):
             self.exit_application()
         elif (code == "REFRESH"):
+            # c = Core.openController("loader")
+            # c.refresh()
             self.devices.update_devices_csv()
         elif (code == "RESTART ALL"):
             self.devices.restart_all()

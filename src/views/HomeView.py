@@ -11,26 +11,23 @@ from views.View import View
     extends / copy tk.Tk as its own, essentially making the current class a 
     Tk on its own and therefor no extra instance needs to be initialized
 """
-class HomeView(tk.Tk, View):
-    #-----------------------------------------------------------------------
-    #        Constants
-    #-----------------------------------------------------------------------
+class explore(tk.Tk):
+
+    # variables
     window_width = 800
     window_height = 600
     window_dim = str(window_width) + "x" + str(window_height)
 
-    current_device_id = 0
-
     devices_data = [
-        # [1, "Student01", "unknown"],
-        # [2, "Student02", "unknown"],
-        # [3, "Student03", "unknown"],
-        # [4, "Student04", "unknown"],
-        # [5, "Student05", "unknown"],
-        # [6, "Student06", "unknown"]
+        ["Student01", "unknown"],
+        ["Student02", "unknown"],
+        ["Student03", "unknown"],
+        ["Student04", "unknown"],
+        ["Student05", "unknown"],
+        ["Student06", "unknown"]
     ]
-    
-    device_application_data = [
+
+    application_data = [
         ["Remmina", "inactive"],
         ["TypeSpeed", "inactive"],
         ["Chrome", "inactive"],
@@ -38,378 +35,365 @@ class HomeView(tk.Tk, View):
         ["LibreOffice", "inactive"]
     ]
 
-    controls = ["EXIT", "REFRESH", "RESTART ALL", "SHUTDOWN ALL", "START DEFAULT"]
-    
-    device_info_data = [
-        # ["Hostname", "wordpropi01"],
-        # ["IP", "192.168.1.1"],
-        # ["Username", "pi"],
-        # ["Status", "Offline"]
+    global_controls = [
+        ["EXIT", "exit"],
+        ["REFRESH", "refresh"],
+        ["RESTART ALL", "restart_all"],
+        ["SHUTDOWN ALL", "shutdown_all"],
+        ["DEFAULT", "default"]
     ]
 
-    device_controls = [
-        ["SHUTDOWN", "active"],
-        ["RESTART", "active"],
-        ["DEFAULT (remmina)", "inactive"]
-    ]
-    
-    #-----------------------------------------------------------------------
-    #        Constructor
-    #-----------------------------------------------------------------------
-    """
-        @param controller Controller of this view
-    """
-    def __init__(self, controller):
+    current_device_id = 1
+
+    current_device_info = None
+
+    current_appication_info = None
+
+    def __init__(self):
         super().__init__()
-        # self.attributes('-fullscreen', True)
-        self.homeController = controller
 
-        # get data
-        self.current_device_id = self.homeController.getCurrentDeviceId()
-        
-        # order of window building
-        self._make_base()
-        self._make_devices_panel()
-        self._make_device_controls()
-        self._make_control_ribbon()
-        self._make_device_application_panel() # update on device change
-        self._make_device() # update on device change
-        
-    
-    #-----------------------------------------------------------------------
-    #        Methods
-    #-----------------------------------------------------------------------
-    """
-        Creates view's frame.
-    """
-    # Experimental refresh method
-    # def refresh(self):
-    #     self.destroy()
-    #     self.__init__()
+        # build gui
+        self._make_root()
 
-    # def update(self):
-    #     tk.update(self)
-    
-    def setDeviceId(self, device_id):
-        self.current_device_id = device_id
-        self.homeController.setCurrentDeviceId(device_id)
-        print(f"Set current device id: {self.current_device_id}")
+        self._make_panel_devices_list()
+        self._make_panel_devices_list_content()
 
-    # create self / main
-    def _make_base(self):
-        self.title("Raspberry Pi Centralised Control")
+        self._make_panel_controls()
+        self._make_panel_controls_global_controls()
+        self._make_panel_controls_applications()
+        self._make_panel_controls_applications_content()
+
+        self._make_panel_controls_device()
+        self._make_panel_controls_device_label()
+        self._make_panel_controls_device_info_panel()
+        self._make_panel_controls_device_info_panel_content()
+        self._make_panel_controls_application_info_panel()
+        self._make_panel_controls_application_info_panel_content()
+
+    # BUILD GUI
+
+    def _make_root(self):
+        self.title("Home")
         self.geometry(self.window_dim)
-        self.config(bg="#e1341e")
+        self.config(bg="#1ECBE1")
 
-    # inside of self / main
-    def _make_devices_panel(self):
-        devices_panel_width = self.window_width * 0.2
-        devices_panel_height = self.window_height * 1
+    # left devices panel in root
+    def _make_panel_devices_list(self):
+        self.panel_devices_list_width = self.window_width * 0.2
+        self.panel_devices_list_height = int(self.window_height * 1.0)
+        self.panel_devices_list = tk.Frame(self,
+                                           border=4,
+                                           width=self.panel_devices_list_width,
+                                           height=self.panel_devices_list_height,
+                                           relief="flat",
+                                           borderwidth=0)
+        self.panel_devices_list.pack(side="left", fill='y')
 
-        # get data
-        self.devices_data = self.homeController.getDevices()
+        panel_devices_list_label = tk.Label(self.panel_devices_list,
+                                            text="DEVICES",
+                                            font=["Arial", 14],
+                                            relief="raised",
+                                            borderwidth=2,
+                                            padx=5,
+                                            pady=5)
+        panel_devices_list_label.config(anchor="center")
+        panel_devices_list_label.pack(side="top", fill='x')
 
-        # frame in root/self
-        self.devices_panel = tk.Frame(self,
-                                      border=4,
-                                      width=devices_panel_width,
-                                      height=devices_panel_height,
-                                      relief="flat",  # border type
-                                      borderwidth=0)
-        self.devices_panel.pack(side="left", fill='y')
+    # devices list in panel devices list (Updatable)
+    def _make_panel_devices_list_content(self):
+        self.panel_devices_list_inner_frame = tk.Frame(self.panel_devices_list,
+                                                       width=self.panel_devices_list_width,
+                                                       height=self.panel_devices_list_height)
+        self.panel_devices_list_inner_frame.pack(fill='y', expand=True)
 
-        # Label at the top in devices panel
-        devices_panel_label = tk.Label(self.devices_panel,
-                                       cursor="arrow",
-                                       text="DEVICES",
-                                       font=["Arial", 14],
-                                       relief="raised",
-                                       borderwidth=2,
-                                       padx=5,
-                                       pady=5)
-        devices_panel_label.config(anchor="center")  # centers the label text
-        devices_panel_label.pack(side="top", fill='x')
+        self.panel_devices_list_canvas = tk.Canvas(self.panel_devices_list_inner_frame,
+                                                   width=self.panel_devices_list_width,
+                                                   height=self.panel_devices_list_height)
+        self.panel_devices_list_canvas.pack(
+            side="left", fill="both", expand=True)
 
-        # frame bellow devices label
-        devices_content = tk.LabelFrame(self.devices_panel,
-                                        width=devices_panel_width,
-                                        height=devices_panel_height)
-        devices_content.pack(fill='y', expand=True)
-
-        # canvas in devices content
-        devices_list = tk.Canvas(devices_content,
-                                 width=devices_panel_width,
-                                 height=devices_panel_height)
-        devices_list.pack(side="left",
-                          fill="both",
-                          expand="yes")
-
-        # intialize scrollbar
-        yscrollbar = ttk.Scrollbar(devices_content,
+        yscrollbar = ttk.Scrollbar(self.panel_devices_list_inner_frame,
                                    orient="vertical",
-                                   command=devices_list.yview)
-        yscrollbar.pack(side="right", fill="y")
+                                   command=self.panel_devices_list_canvas.yview)
+        yscrollbar.pack(side="right", fill='y')
 
-        # configure
-        devices_list.configure(yscrollcommand=yscrollbar.set)
+        self.panel_devices_list_canvas.configure(yscrollcommand=yscrollbar.set)
 
-        # e: pass event
-        devices_list.bind("<Configure>",
-                          lambda e: devices_list.configure(
-                              scrollregion=devices_list.bbox("all")))
+        self.panel_devices_list_canvas.bind("<Configure>",
+                                            lambda e: self.panel_devices_list_canvas.configure(
+                                                scrollregion=self.panel_devices_list_canvas.bbox(
+                                                    "all")
+                                            ))
 
-        # frame in devices lists
-        devices = tk.Frame(devices_list,
-                           width=devices_panel_width,
-                           height=devices_panel_height)
+        devices_list = tk.Frame(self.panel_devices_list_canvas,
+                                width=self.panel_devices_list_width,
+                                height=self.panel_devices_list_height)
 
-        # window in devices
-        devices_list.create_window((0, 0),
-                                   window=devices,  # where in to create the scrollable window
-                                   anchor="nw")  # basically makes the scroll start at the top
+        self.panel_devices_list_canvas.create_window((0, 0),
+                                                     window=devices_list,
+                                                     anchor="nw")
 
-        # add buttons in devices in devices list in devices content
         for device in self.devices_data:
-            device_btn = tk.Button(devices,
-                                   cursor="hand2",  # cursor type
-                                   text=device[1],
-                                   width=15,
-                                   command=lambda id=device[0]: self.setDeviceId(id))
+            device_btn = tk.Button(devices_list,
+                                   cursor="hand2",
+                                   text=device[0],
+                                   width=15)
 
-            if device[2] == "online":
+            if device[1].lower == "online":
                 device_btn.config(bg="green")
-            elif device[2] == "offline":
+            elif device[1].lower == "offline":
                 device_btn.config(bg="red")
             else:
                 device_btn.config(bg="blue")
 
-            device_btn.config(fg="white",
-                              font=["Arial", 12])  # font
+            device_btn.config(fg="white", font=["Arial", 12])
 
-            device_btn.pack(side="top",
-                            fill="both",
-                            expand="yes")
+            device_btn.pack(side="top", fill="both", expand=True)
 
-    # inside of self / main
-    def _make_device_controls(self):
-        self.device_controls_width = self.window_width * 0.82
-        self.device_controls_height = self.window_height * 1.0
-        # frame in root
-        self.device_control = tk.Frame(self,
+    # right control panel in root
+    def _make_panel_controls(self):
+        self.panel_controls_width = int(self.window_width * 0.8)
+        self.panel_controls_height = int(self.window_height * 1.0)
+        self.panel_controls = tk.Frame(self,
                                        border=0,
-                                       width=self.device_controls_width,
-                                       height=self.device_controls_height)
-        self.device_control.pack(side="right", fill="both", expand=True)
+                                       width=self.panel_controls_width,
+                                       height=self.panel_controls_height)
+        self.panel_controls.pack(side="right", fill='both', expand=True)
 
-    # inside of device control
-    def _make_device_application_panel(self):
-        device_application_panel_width = self.device_controls_width * 0.25
-        device_application_panel_height = self.device_controls_height * 1
-        # frame in device_controls
-        self.device_application_panel = tk.Frame(self.device_control,  # location
-                                           border=4,
-                                           #   cursor="hand2", # cursor type
-                                           width=device_application_panel_width,  # panel width
-                                           height=device_application_panel_height,  # panel height
-                                           relief="flat",  # border type
-                                           borderwidth=0)  # border width
-        self.device_application_panel.pack(side="right", fill='y')
+    # global controls in control panel at the bottom
+    def _make_panel_controls_global_controls(self):
+        self.panel_controls_global_controls_width = int(
+            self.panel_controls_width * 0.1)
+        self.panel_controls_global_controls_height = int(
+            self.panel_controls_height * 0.1)
+        self.panel_controls_global_controls = tk.Frame(self.panel_controls,
+                                                       width=self.panel_controls_global_controls_width,
+                                                       height=self.panel_controls_global_controls_height,
+                                                       relief="flat",
+                                                       borderwidth=0,
+                                                       pady=4)
+        self.panel_controls_global_controls.pack(side="bottom", fill='x')
 
-        # Label at the top in device_application panel
-        device_application_panel_label = tk.Label(self.device_application_panel,  # location
-                                            cursor="arrow",  # cursor type
-                                            text="APPLICATIONS",  # label text
-                                            font=["Arial", 14],  # font
-                                            relief="raised",  # border type
-                                            borderwidth=2,  # border width
-                                            padx=5,  # x sides padding
-                                            pady=5)  # y sides padding
-        device_application_panel_label.config(
-            anchor="center")  # centers the label text
-        device_application_panel_label.pack(side="top", fill='x')
+        for control in self.global_controls:
+            control_button = tk.Button(self.panel_controls_global_controls,
+                                       cursor="hand2",
+                                       #    command= lambda x=control[1]: self
+                                       text=control[0],
+                                       width=10,
+                                       padx=1)
+            control_button.pack(side="right", fill="both", expand=True)
 
-        # frame bellow device_application label
-        device_application_content = tk.LabelFrame(self.device_application_panel,
-                                             width=device_application_panel_width,
-                                             height=device_application_panel_height)
-        device_application_content.pack()
+    # applications list in control panel
+    def _make_panel_controls_applications(self):
+        self.panel_controls_applications_width = self.panel_controls_width * 0.25
+        self.panel_controls_applications_height = int(
+            self.panel_controls_height * 1.0)
+        self.panel_controls_applications_controls = tk.Frame(self.panel_controls,
+                                                             border=4,
+                                                             width=self.panel_controls_applications_width,
+                                                             height=self.panel_controls_applications_height,
+                                                             relief="flat",
+                                                             borderwidth=0)
+        self.panel_controls_applications_controls.pack(side="right", fill='y')
 
-        # canvas in device_application content
-        device_application_list = tk.Canvas(device_application_content,
-                                      width=device_application_panel_width,
-                                      height=device_application_panel_height)
-        device_application_list.pack(side="left",
-                               fill="both",
-                               expand="yes")
+        panel_controls_applications_controls_label = tk.Label(self.panel_controls_applications_controls,
+                                                              text="Applications",
+                                                              font=[
+                                                                  "Arial", 14],
+                                                              relief="raised",
+                                                              borderwidth=2,
+                                                              padx=5,
+                                                              pady=5)
+        panel_controls_applications_controls_label.config(anchor="center")
+        panel_controls_applications_controls_label.pack(side="top", fill='x')
 
-        # intialize scrollbar
-        yscrollbar = ttk.Scrollbar(device_application_content,
+    # applications list in controls applications (Updatable)
+    def _make_panel_controls_applications_content(self):
+        self.panel_controls_applications_inner_frame = tk.Frame(self.panel_controls_applications_controls,
+                                                                width=self.panel_controls_applications_width,
+                                                                height=self.panel_controls_applications_height)
+
+        self.panel_controls_applications_inner_frame.pack(
+            fill='y', expand=True)
+
+        self.panel_controls_applications_canvas = tk.Canvas(self.panel_controls_applications_inner_frame,
+                                                            width=self.panel_controls_applications_width,
+                                                            height=self.panel_controls_applications_height)
+        self.panel_controls_applications_canvas.pack(
+            side="left", fill="both", expand=True)
+
+        yscrollbar = ttk.Scrollbar(self.panel_controls_applications_inner_frame,
                                    orient="vertical",
-                                   command=device_application_list.yview)
-        yscrollbar.pack(side="right", fill="y")
+                                   command=self.panel_controls_applications_canvas.yview)
+        yscrollbar.pack(side="right", fill='y')
 
-        # configure
-        device_application_list.configure(yscrollcommand=yscrollbar.set)
+        self.panel_controls_applications_canvas.configure(
+            yscrollcommand=yscrollbar.set)
 
-        # e: pass event
-        device_application_list.bind("<Configure>",
-                               lambda e: device_application_list.configure(
-                                   scrollregion=device_application_list.bbox("all")))
+        self.panel_controls_applications_canvas.bind("<Configure>",
+                                                     lambda e: self.panel_controls_applications_canvas.configure(
+                                                         scrollregion=self.panel_controls_applications_canvas.bbox(
+                                                             "all")
+                                                     ))
 
-        # frame in device_application lists
-        device_application = tk.Frame(device_application_list,
-                                width=device_application_panel_width,
-                                height=device_application_panel_height)
+        applications_list = tk.Frame(self.panel_controls_applications_canvas,
+                                     width=self.panel_controls_applications_width,
+                                     height=self.panel_controls_applications_height)
 
-        # window in device_application
-        device_application_list.create_window((0, 0),
-                                        window=device_application,  # where in to create the scrollable window
-                                        anchor="nw")  # basically makes the scroll start at the top
+        self.panel_controls_applications_canvas.create_window((0, 0),
+                                                              window=applications_list,
+                                                              anchor="nw")
 
-        # add buttons in device_application in device_application list in device_application content
-        for application in self.device_application_data:
-            app_btn = tk.Button(device_application,
-                                cursor="hand2",  # cursor type
-                                text=application[0],
-                                width=15)
+        for application in self.devices_data:
+            device_btn = tk.Button(applications_list,
+                                   cursor="hand2",
+                                   text=application[0],
+                                   width=15)
 
-            app_btn.config(fg="white",
-                           font=["Arial", 12])  # font
-
-            if application[1] == "active":
-                app_btn.config(bg="green")
-            elif application[1] == "inactive":
-                app_btn.config(bg="grey", fg="black")
+            if application[1].lower == "active":
+                device_btn.config(bg="green")
+            elif application[1].lower == "inactive":
+                device_btn.config(bg="grey")
             else:
-                app_btn.config(bg="red")
+                device_btn.config(bg="blue")
 
-            app_btn.pack(side="top",
-                         fill="both",
-                         expand="yes")
+            device_btn.config(fg="white", font=["Arial", 12])
 
-    # inside of device control
-    def _make_control_ribbon(self):
-        control_ribbon_width = self.device_controls_width * 1.0
-        control_ribbon_height = self.device_controls_height * 0.1
-        # frame in device_control
-        self.control_ribbon = tk.Frame(self.device_control,  # location
-                                       border=4,
-                                       #   cursor="hand2", # cursor type
-                                       width=control_ribbon_width,  # panel width
-                                       height=control_ribbon_height,  # panel height
-                                       relief="flat",  # border type
-                                       borderwidth=0,  # border width
-                                       pady=4)  # padding top and bottom
-        self.control_ribbon.pack(side="bottom", fill='x')
+            device_btn.pack(side="top", fill="both", expand=True)
 
-        # add buttons in control ribbon
-        for control in self.controls:
-            control_btn = tk.Button(self.control_ribbon,  # location
-                                    cursor="hand2",  # cursor type
-                                    text=control,  # button text
-                                    width=10,  # width
-                                    padx=1,  # padding left and right
-                                    command=lambda x=control: self.homeController.ribbonControl(x))
-            if control == "EXIT":
-                control_btn.config(bg="red")
+    # device and application info in controls panel
+    def _make_panel_controls_device(self):
+        self.panel_controls_device_width = self.panel_controls_width * 0.75
+        self.panel_controls_device_height = int(
+            self.panel_controls_height * 1.0)
+        self.panel_controls_device = tk.Frame(self.panel_controls,
+                                              border=4,
+                                              width=self.panel_controls_device_width,
+                                              height=self.panel_controls_device_height,
+                                              relief="flat",
+                                              borderwidth=0)
+        self.panel_controls_device.pack(side="top", fill="both", expand=True)
 
-            control_btn.pack(side="right",
-                             fill="both",
-                             expand="yes")
+    # label for device and application info in controls device panel (Updatable)
+    def _make_panel_controls_device_label(self):
+        if self.current_device_id < 10:
+            label_text = "DEVICE: 0" + str(self.current_device_id)
+        else:
+            label_text = "DEVICE: " + str(self.current_device_id)
+        self.panel_controls_device_label = tk.Label(self.panel_controls_device,
+                                                    text=label_text,
+                                                    font=["Arial", 14],
+                                                    relief="raised",
+                                                    borderwidth=2,
+                                                    padx=5,
+                                                    pady=5)
+        self.panel_controls_device_label.config(anchor="center")
+        self.panel_controls_device_label.pack(side="top", fill='x')
 
-    # inside of device control
-    def _make_device(self):
-        device_panel_width = self.device_controls_width * 0.75
-        device_panel_height = self.device_controls_height * 0.9
+    # device info panel in controls device panel
+    def _make_panel_controls_device_info_panel(self):
+        self.panel_controls_device_info_panel_width = self.panel_controls_device_width * 1.0
+        self.panel_controls_device_info_panel_height = int(
+            self.panel_controls_device_height * 0.5)
+        self.panel_controls_device_info_panel = tk.Frame(self.panel_controls_device,
+                                                         border=4,
+                                                         width=self.panel_controls_device_info_panel_width,
+                                                         height=self.panel_controls_device_info_panel_height,
+                                                         relief="flat",
+                                                         borderwidth=0)
+        self.panel_controls_device_info_panel.pack(side="top")
+        panel_controls_device_info_panel_label = tk.Label(self.panel_controls_device_info_panel,
+                                                          text="Info",
+                                                          font=["Arial", 14],
+                                                          relief="raised",
+                                                          borderwidth=2,
+                                                          padx=5,
+                                                          pady=5)
+        panel_controls_device_info_panel_label.config(anchor="center")
+        panel_controls_device_info_panel_label.pack(side="top", fill='x')
 
-        # get data
-        self.device_info_data = self.homeController.getDeviceInfo(self.current_device_id)
+    # device info in device info panel (Updatable)
+    def _make_panel_controls_device_info_panel_content(self):
+        self.panel_controls_device_info_panel_content_width = self.panel_controls_device_info_panel_width
+        self.panel_controls_device_info_panel_content_height = int(
+            self.panel_controls_device_info_panel_height * 1.0)
+        self.panel_controls_device_info_panel_content = tk.Frame(self.panel_controls_device_info_panel,
+                                                                 border=4,
+                                                                 width=self.panel_controls_device_info_panel_content_width,
+                                                                 height=self.panel_controls_device_info_panel_content_height,
+                                                                 relief="flat",
+                                                                 borderwidth=0)
+        self.panel_controls_device_info_panel_content.pack(
+            side="top", fill="both", expand=True)
 
-        # frame in device_control
-        self.device_panel = tk.Frame(self.device_control,  # location
-                                     border=4,
-                                     width=device_panel_width,  # panel width
-                                     height=device_panel_height,  # panel height
-                                     relief="flat",  # border type
-                                     borderwidth=0)  # border width
-        self.device_panel.pack(side="top", fill='both', expand=True)
+    # application info panel in controls device panel
+    def _make_panel_controls_application_info_panel(self):
+        self.panel_controls_application_info_panel_width = self.panel_controls_device_width
+        self.panel_controls_application_info_panel_height = int(
+            self.panel_controls_device_height * 0.5)
+        self.panel_controls_application_info_panel = tk.Frame(self.panel_controls_device,
+                                                              border=4,
+                                                              width=self.panel_controls_application_info_panel_width,
+                                                              height=self.panel_controls_application_info_panel_height,
+                                                              relief="flat",
+                                                              borderwidth=0)
+        self.panel_controls_application_info_panel.pack(side="top")
+        panel_controls_application_info_panel_label = tk.Label(self.panel_controls_application_info_panel,
+                                                               text="APP INFO",
+                                                               font=[
+                                                                   "Arial", 14],
+                                                               relief="raised",
+                                                               borderwidth=2,
+                                                               padx=5,
+                                                               pady=5)
+        panel_controls_application_info_panel_label.config(anchor="center")
+        panel_controls_application_info_panel_label.pack(side="top", fill='x')
 
-        # Label in device_panel
-        device_label = tk.Label(self.device_panel,  # location
-                                cursor="arrow",
-                                text="DEVICE",
-                                font=["Arial", 14],
-                                relief="raised",
-                                borderwidth=2,
-                                padx=5,
-                                pady=5)
-        device_label.config(anchor="center")  # centers the label text
-        device_label.pack(side="top", fill='x')
+    # application info in device info panel (Updatable)
+    def _make_panel_controls_application_info_panel_content(self):
+        self.panel_controls_application_info_panel_content_width = self.panel_controls_application_info_panel_width
+        self.panel_controls_application_info_panel_content_height = int(
+            self.panel_controls_application_info_panel_height * 1.0)
+        self.panel_controls_application_info_panel_content = tk.Frame(self.panel_controls_application_info_panel,
+                                                                      border=4,
+                                                                      width=self.panel_controls_application_info_panel_content_width,
+                                                                      height=self.panel_controls_application_info_panel_content_height,
+                                                                      relief="flat",
+                                                                      borderwidth=0)
+        self.panel_controls_application_info_panel_content.pack(
+            side="top", fill="both", expand=True)
 
-        # frame in device_control under title
-        device_info = tk.Frame(self.device_panel,  # location
-                               width=device_panel_width)  # panel width
-        device_info.pack(side="top", fill='both', expand=True)
+    # UPDATE GUI
 
-        # table in device info
-        treeView = ttk.Treeview(device_info,
-                                columns=(1, 2),
-                                show="headings",
-                                height=5)
-        treeView.pack(side="top", fill='both')
+    def update_devices_list(self, new_devices_list=None):
+        if new_devices_list is not None:
+            self.devices_data = new_devices_list
+        self.panel_devices_list_inner_frame.destroy()
+        self._make_panel_devices_list_content()
 
-        treeView.heading(1, text="Field")
-        treeView.heading(2, text="Value")
+    def update_applications_list(self, new_applications_list=None):
+        if new_applications_list is not None:
+            self.application_data = new_applications_list
+        self.panel_controls_applications_inner_frame.destroy()
+        self._make_panel_controls_applications_content()
 
-        for info in self.device_info_data:
-            treeView.insert('', "end", values=info)
+    def update_device_label(self, new_device_id=None):
+        if new_device_id is not None:
+            self.current_device_id = int(new_device_id)
+        self.panel_controls_device_label.destroy()
+        self._make_panel_controls_device_label()
 
-        # frame in device info
-        device_control = tk.Frame(device_info, # location
-                                relief="flat",  # border type
-                                borderwidth=0,  # border width
-                                pady=4)  # padding top and bottom
-        device_control.pack(side="top", fill='x')
+    def update_device_info(self, new_device_info=None):
+        if new_device_info is not None:
+            self.current_device_info = new_device_info
+        self.panel_controls_device_info_panel_content.destroy()
+        self._make_panel_controls_device_info_panel_content()
 
-        # add buttons in device control
-        for control in self.device_controls:
-            control_btn = tk.Button(device_control,  # location
-                                    cursor="hand2",  # cursor type
-                                    text=control[0],  # button text
-                                    width=10,  # width
-                                    padx=1)  # padding left and right
+    def update_appication_info(self, new_appication_info=None):
+        if new_appication_info is not None:
+            self.current_appication_info = new_appication_info
+        self.panel_controls_application_info_panel_content.destroy()
+        self._make_panel_controls_application_info_panel_content()
 
-            control_btn.pack(side="right",
-                             fill="both",
-                             expand="yes")
-                                  
-
-        # frame in device_control under device info
-        app_info = tk.Frame(self.device_panel,  # location
-                            width=device_panel_width)  # panel width
-        app_info.pack(side="top", fill='both', expand=True)
-
-        # label in app_info
-        app_info_title = tk.Label(app_info,  # location
-                                  text="APPLICATION INFO",
-                                  font=["Arial", 12],
-                                  relief="groove",
-                                  borderwidth=1,
-                                  padx=2,
-                                  pady=2)
-        app_info_title.pack(side="top", fill='x', expand=True)
-
-    """
-    @Overrite
-    """
-    def main(self):
+    def show(self):
         self.mainloop()
-        
-    # def exit_application(self):
-    #     self.destroy()
-    """
-    @Overrite
-    """
-    def close(self):
-        return
-    
