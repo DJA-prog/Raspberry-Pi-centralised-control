@@ -2,7 +2,7 @@ import os
 from config import APP_PATH
 from models.Scan import Scan
 import csv
-
+import json
 
 """
     Model description
@@ -14,7 +14,8 @@ class Devices:
     device_info_data = []
 
     device_application_json = APP_PATH+"/storage/devices_application_data.json"
-    device_application_data = []
+    device_application_data = None
+    device_application_open = False
 
 
     def __init__(self):
@@ -75,7 +76,18 @@ class Devices:
             for line in devices_list:
                 if line["exempted"] == "false" and self.scanModel.is_device_online(line["hostname"]):
                     self.scanModel.execute_remote_command(line["hostname"], line["username"], line["password"], "sudo shutdown now & exit")
-                
+
+    def readJson(self):
+        if self.device_application_open is False:
+            self.application_json_file = open(self.device_application_json, 'r')
+            self.appication_json_data = self.application_json_file.read()
+            #parse
+            self.device_application_data = json.loads(self.appication_json_data)
+            self.device_appication_open = True
+
+    def get_device_applications(self, device_id):
+        self.readJson()
+        return self.device_application_data[str(device_id)]
 
     def get_devices_status_list(self):
         with open(self.devices_csv, 'r') as csvfile:

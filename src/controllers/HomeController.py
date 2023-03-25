@@ -29,8 +29,10 @@ class HomeController(Controller):
     #        Methods
     #-----------------------------------------------------------------------
     def getDevices(self):
-        data = self.devices.get_devices_status_list()
-        return data
+        return self.devices.get_devices_status_list()
+    
+    def getDeviceAplications(self, device_id):
+        return self.devices.get_device_applications(device_id)
     
     def getCurrentDeviceId(self):
         return self.current_device_id

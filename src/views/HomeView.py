@@ -19,6 +19,7 @@ class HomeView(tk.Tk):
     window_width = 800
     window_height = 600
     window_dim = str(window_width) + "x" + str(window_height)
+    welcomed = False
 
     devices_data = [
         # [1, "Student01", "unknown"],
@@ -29,12 +30,14 @@ class HomeView(tk.Tk):
         # [6, "Student06", "unknown"]
     ]
 
+    device_info = []
+
     application_data = [
-        ["Remmina", "inactive"],
-        ["TypeSpeed", "inactive"],
-        ["Chrome", "inactive"],
-        ["Firefox", "inactive"],
-        ["LibreOffice", "inactive"]
+        # ["Remmina", "inactive"],
+        # ["TypeSpeed", "inactive"],
+        # ["Chrome", "inactive"],
+        # ["Firefox", "inactive"],
+        # ["LibreOffice", "inactive"]
     ]
 
     global_controls = [
@@ -58,6 +61,8 @@ class HomeView(tk.Tk):
         # get data
         self.current_device_id = self.homeController.getCurrentDeviceId()
         self.devices_data = self.homeController.getDevices()
+        self.application_data = self.homeController.getDeviceAplications(self.current_device_id)
+        self.current_appication_info = self.application_data[0]
 
         # build gui
         self._make_root()
@@ -67,15 +72,9 @@ class HomeView(tk.Tk):
 
         self._make_panel_controls()
         self._make_panel_controls_global_controls()
-        self._make_panel_controls_applications()
-        self._make_panel_controls_applications_content()
 
-        self._make_panel_controls_device()
-        # self._make_panel_controls_device_label()
-        self._make_panel_controls_device_info_panel()
-        self._make_panel_controls_device_info_panel_content()
-        self._make_panel_controls_application_info_panel()
-        self._make_panel_controls_application_info_panel_content()
+        if self.welcomed:
+            self.display_device_info()
 
     # BUILD GUI
 
@@ -92,8 +91,8 @@ class HomeView(tk.Tk):
                                            border=4,
                                            width=self.panel_devices_list_width,
                                            height=self.panel_devices_list_height,
-                                           relief="flat",
-                                           borderwidth=0)
+                                           relief="raised",
+                                           borderwidth=2)
         self.panel_devices_list.pack(side="left", fill='y')
 
         panel_devices_list_label = tk.Label(self.panel_devices_list,
@@ -177,9 +176,9 @@ class HomeView(tk.Tk):
         self.panel_controls_global_controls = tk.Frame(self.panel_controls,
                                                        width=self.panel_controls_global_controls_width,
                                                        height=self.panel_controls_global_controls_height,
-                                                       relief="flat",
-                                                       borderwidth=0,
-                                                       pady=4)
+                                                       relief="raised",
+                                                       borderwidth=2,
+                                                       pady=1)
         self.panel_controls_global_controls.pack(side="bottom", fill='x')
 
         for control in self.global_controls:
@@ -200,11 +199,11 @@ class HomeView(tk.Tk):
         self.panel_controls_applications_height = int(
             self.panel_controls_height * 1.0)
         self.panel_controls_applications_controls = tk.Frame(self.panel_controls,
-                                                             border=4,
+                                                             border=0,
                                                              width=self.panel_controls_applications_width,
                                                              height=self.panel_controls_applications_height,
-                                                             relief="flat",
-                                                             borderwidth=0)
+                                                             relief="raised",
+                                                             borderwidth=2)
         self.panel_controls_applications_controls.pack(side="right", fill='y')
 
         panel_controls_applications_controls_label = tk.Label(self.panel_controls_applications_controls,
@@ -258,12 +257,13 @@ class HomeView(tk.Tk):
         for application in self.application_data:
             device_btn = tk.Button(applications_list,
                                    cursor="hand2",
-                                   text=application[0],
-                                   width=15)
+                                   text=application["name"],
+                                   width=15,
+                                   command=lambda x=application["name"]: self.update_appication_info(x))
 
-            if application[1].lower == "active":
+            if application["status"] == "active":
                 device_btn.config(bg="green")
-            elif application[1].lower == "inactive":
+            elif application["status"] == "inactive":
                 device_btn.config(bg="grey")
             else:
                 device_btn.config(bg="blue")
@@ -330,6 +330,20 @@ class HomeView(tk.Tk):
                                                                  borderwidth=0)
         self.panel_controls_device_info_panel_content.pack(
             side="top", fill="both", expand=True)
+        # create table
+        panel_controls_device_info_panel_content_table = ttk.Treeview(self.panel_controls_device_info_panel_content,
+                                                                      columns=("option", "value"),
+                                                                      show="headings")
+        panel_controls_device_info_panel_content_table.heading("option",text="Option")
+        panel_controls_device_info_panel_content_table.heading("value",text="Value")
+        panel_controls_device_info_panel_content_table.column("option", stretch=YES)
+        panel_controls_device_info_panel_content_table.column("value", stretch=YES)
+        panel_controls_device_info_panel_content_table.pack(side="top", fill="both", expand=True)
+        # insert data
+        info_index = 0
+        for info in self.device_info:
+            panel_controls_device_info_panel_content_table.insert(parent = '', index=info_index, values=info)
+            info_index += 1
 
     # application info panel in controls device panel
     def _make_panel_controls_application_info_panel(self):
@@ -367,22 +381,51 @@ class HomeView(tk.Tk):
                                                                       borderwidth=0)
         self.panel_controls_application_info_panel_content.pack(
             side="top", fill="both", expand=True)
+        # create table
+        panel_controls_application_info_panel_content_table = ttk.Treeview(self.panel_controls_application_info_panel_content,
+                                                                      columns=("option", "value"),
+                                                                      show="headings")
+        panel_controls_application_info_panel_content_table.heading("option",text="Option")
+        panel_controls_application_info_panel_content_table.heading("value",text="Value")
+        panel_controls_application_info_panel_content_table.column("option", stretch=YES)
+        panel_controls_application_info_panel_content_table.column("value", stretch=YES)
+        panel_controls_application_info_panel_content_table.pack(side="top", fill="both", expand=True)
+        # insert data
+        info_index = 0
+        for info_key, info_value in self.current_appication_info.items():
+            panel_controls_application_info_panel_content_table.insert(parent = '', index=info_index, values=(info_key, info_value))
+            info_index += 1
+
 
     # UPDATE GUI
+    def display_device_info(self): # self.display_device_info()
+        if self.welcomed == False:
+            self._make_panel_controls_applications()
+            self._make_panel_controls_applications_content()
+            self._make_panel_controls_device()
+            # self._make_panel_controls_device_label()
+            self._make_panel_controls_device_info_panel()
+            self._make_panel_controls_device_info_panel_content()
+            self._make_panel_controls_application_info_panel()
+            self._make_panel_controls_application_info_panel_content()
+            self.welcomed = True
 
     def update_devices_list(self, new_devices_list=None):
+        self.display_device_info()
         if new_devices_list is not None:
             self.devices_data = new_devices_list
         self.panel_devices_list_inner_frame.destroy()
         self._make_panel_devices_list_content()
 
     def update_applications_list(self, new_applications_list=None):
+        self.display_device_info()
         if new_applications_list is not None:
             self.application_data = new_applications_list
         self.panel_controls_applications_inner_frame.destroy()
         self._make_panel_controls_applications_content()
 
     def update_device_label(self, new_device_id=None):
+        self.display_device_info()
         if int(self.current_device_id) < 10:
             label_text = "STUDENT: 0" + str(self.current_device_id)
         else:
@@ -390,22 +433,42 @@ class HomeView(tk.Tk):
         self.panel_controls_device_label.configure(text=label_text)
 
     def update_device_info(self, new_device_info=None):
+        self.display_device_info()
         if new_device_info is not None:
             self.current_device_info = new_device_info
         self.panel_controls_device_info_panel_content.destroy()
         self._make_panel_controls_device_info_panel_content()
 
-    def update_appication_info(self, new_appication_info=None):
+    def update_appication_info(self, application_name = None, new_appication_info=None):
+        self.display_device_info()
         if new_appication_info is not None:
             self.current_appication_info = new_appication_info
+        if application_name is not None:
+            app_pos = 0
+            for app in self.application_data:
+                if app["name"] == application_name:
+                    self.current_appication_info = self.application_data[app_pos]
+                    break
+                app_pos += 1
+        else:
+            self.current_appication_info = self.application_data[0]
         self.panel_controls_application_info_panel_content.destroy()
         self._make_panel_controls_application_info_panel_content()
 
     def setDeviceId(self, device_id):
         self.current_device_id = device_id
         self.homeController.setCurrentDeviceId(device_id)
-        print(f"Set current device id: {self.current_device_id}")
+        # get applications
+        self.application_data = self.homeController.getDeviceAplications(self.current_device_id)
+        # print(f"Set current device id: {self.current_device_id}")
+        # print(self.application_data)
+        #get device information
+        self.device_info = self.homeController.getDeviceInfo(self.current_device_id)
+
+        self.update_appication_info()
+        self.update_applications_list()
         self.update_device_label()
+        self.update_device_info()
 
     def main(self):
         self.mainloop()

@@ -33,7 +33,7 @@
     "2": [
         {
             "name": "Remmina",
-            "status": "inactive",
+            "status": "active",
             "is_connected": "disconnected",
             "user": "none"
         },
