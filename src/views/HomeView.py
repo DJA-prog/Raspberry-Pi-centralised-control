@@ -11,7 +11,9 @@ from views.View import View
     extends / copy tk.Tk as its own, essentially making the current class a 
     Tk on its own and therefor no extra instance needs to be initialized
 """
-class explore(tk.Tk):
+
+
+class HomeView(tk.Tk):
 
     # variables
     window_width = 800
@@ -19,12 +21,12 @@ class explore(tk.Tk):
     window_dim = str(window_width) + "x" + str(window_height)
 
     devices_data = [
-        ["Student01", "unknown"],
-        ["Student02", "unknown"],
-        ["Student03", "unknown"],
-        ["Student04", "unknown"],
-        ["Student05", "unknown"],
-        ["Student06", "unknown"]
+        # [1, "Student01", "unknown"],
+        # [2, "Student02", "unknown"],
+        # [3, "Student03", "unknown"],
+        # [4, "Student04", "unknown"],
+        # [5, "Student05", "unknown"],
+        # [6, "Student06", "unknown"]
     ]
 
     application_data = [
@@ -49,8 +51,13 @@ class explore(tk.Tk):
 
     current_appication_info = None
 
-    def __init__(self):
+    def __init__(self, controller):
         super().__init__()
+        self.homeController = controller
+
+        # get data
+        self.current_device_id = self.homeController.getCurrentDeviceId()
+        self.devices_data = self.homeController.getDevices()
 
         # build gui
         self._make_root()
@@ -64,7 +71,7 @@ class explore(tk.Tk):
         self._make_panel_controls_applications_content()
 
         self._make_panel_controls_device()
-        self._make_panel_controls_device_label()
+        # self._make_panel_controls_device_label()
         self._make_panel_controls_device_info_panel()
         self._make_panel_controls_device_info_panel_content()
         self._make_panel_controls_application_info_panel()
@@ -136,8 +143,9 @@ class explore(tk.Tk):
         for device in self.devices_data:
             device_btn = tk.Button(devices_list,
                                    cursor="hand2",
-                                   text=device[0],
-                                   width=15)
+                                   text=device[1],
+                                   width=15,
+                                   command=lambda id=device[0]: self.setDeviceId(id))
 
             if device[1].lower == "online":
                 device_btn.config(bg="green")
@@ -177,10 +185,13 @@ class explore(tk.Tk):
         for control in self.global_controls:
             control_button = tk.Button(self.panel_controls_global_controls,
                                        cursor="hand2",
-                                       #    command= lambda x=control[1]: self
                                        text=control[0],
                                        width=10,
-                                       padx=1)
+                                       padx=1,
+                                       command=lambda x=control[0]: self.homeController.ribbonControl(x))
+            if control[0] == "EXIT":
+                control_button.config(bg="red")
+
             control_button.pack(side="right", fill="both", expand=True)
 
     # applications list in control panel
@@ -244,7 +255,7 @@ class explore(tk.Tk):
                                                               window=applications_list,
                                                               anchor="nw")
 
-        for application in self.devices_data:
+        for application in self.application_data:
             device_btn = tk.Button(applications_list,
                                    cursor="hand2",
                                    text=application[0],
@@ -274,14 +285,8 @@ class explore(tk.Tk):
                                               borderwidth=0)
         self.panel_controls_device.pack(side="top", fill="both", expand=True)
 
-    # label for device and application info in controls device panel (Updatable)
-    def _make_panel_controls_device_label(self):
-        if self.current_device_id < 10:
-            label_text = "DEVICE: 0" + str(self.current_device_id)
-        else:
-            label_text = "DEVICE: " + str(self.current_device_id)
         self.panel_controls_device_label = tk.Label(self.panel_controls_device,
-                                                    text=label_text,
+                                                    text="DEVICE",
                                                     font=["Arial", 14],
                                                     relief="raised",
                                                     borderwidth=2,
@@ -378,10 +383,11 @@ class explore(tk.Tk):
         self._make_panel_controls_applications_content()
 
     def update_device_label(self, new_device_id=None):
-        if new_device_id is not None:
-            self.current_device_id = int(new_device_id)
-        self.panel_controls_device_label.destroy()
-        self._make_panel_controls_device_label()
+        if int(self.current_device_id) < 10:
+            label_text = "STUDENT: 0" + str(self.current_device_id)
+        else:
+            label_text = "STUDENT: " + str(self.current_device_id)
+        self.panel_controls_device_label.configure(text=label_text)
 
     def update_device_info(self, new_device_info=None):
         if new_device_info is not None:
@@ -395,5 +401,11 @@ class explore(tk.Tk):
         self.panel_controls_application_info_panel_content.destroy()
         self._make_panel_controls_application_info_panel_content()
 
-    def show(self):
+    def setDeviceId(self, device_id):
+        self.current_device_id = device_id
+        self.homeController.setCurrentDeviceId(device_id)
+        print(f"Set current device id: {self.current_device_id}")
+        self.update_device_label()
+
+    def main(self):
         self.mainloop()
