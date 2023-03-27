@@ -49,7 +49,9 @@ class HomeController(Controller):
         elif (code == "REFRESH"):
             # c = Core.openController("loader")
             # c.refresh()
-            self.devices.update_devices_csv()
+            if self.devices.update_devices_csv():
+                self.homeView.update_devices_list(self.getDevices())
+                # pass
         elif (code == "RESTART ALL"):
             self.devices.restart_all()
         elif (code == "SHUTDOWN ALL"):
@@ -57,6 +59,15 @@ class HomeController(Controller):
         elif (code == "START DEFAULT"):
             pass
     
+    def deviceControl(self, code):
+        # print(f"CODE: {code}, DEVICE ID: {self.current_device_id}")
+        if (code == "SHUTDOWN"):
+            self.devices.device_shutdown(self.current_device_id)
+        elif (code == "RESTART"):
+            self.devices.device_restart(self.current_device_id)
+        elif (code == "DEFAULT"):
+            self.devices.device_default(self.current_device_id)
+
     def exit_application(self):
         self.devices.notify_exit()
         self.homeView.close()

@@ -48,6 +48,12 @@ class HomeView(tk.Tk):
         ["DEFAULT", "default"]
     ]
 
+    device_control = [
+        ["SHUTDOWN", "shutdown"],
+        ["RESTART", "restart"],
+        ["DEFAULT", "default"]
+    ]
+
     current_device_id = 1
 
     current_device_info = None
@@ -60,7 +66,7 @@ class HomeView(tk.Tk):
 
         # get data
         self.current_device_id = self.homeController.getCurrentDeviceId()
-        self.devices_data = self.homeController.getDevices()
+        self.devices_data[:] = self.homeController.getDevices()
         self.application_data = self.homeController.getDeviceAplications(self.current_device_id)
         self.current_appication_info = self.application_data[0]
 
@@ -145,10 +151,10 @@ class HomeView(tk.Tk):
                                    text=device[1],
                                    width=15,
                                    command=lambda id=device[0]: self.setDeviceId(id))
-
-            if device[1].lower == "online":
+            # print(f"Device: {device[1]}; Status: {device[2]}")
+            if device[2].lower() == "online":
                 device_btn.config(bg="green")
-            elif device[1].lower == "offline":
+            elif device[2].lower() == "offline":
                 device_btn.config(bg="red")
             else:
                 device_btn.config(bg="blue")
@@ -330,6 +336,7 @@ class HomeView(tk.Tk):
                                                                  borderwidth=0)
         self.panel_controls_device_info_panel_content.pack(
             side="top", fill="both", expand=True)
+
         # create table
         panel_controls_device_info_panel_content_table = ttk.Treeview(self.panel_controls_device_info_panel_content,
                                                                       columns=("option", "value"),
@@ -344,6 +351,24 @@ class HomeView(tk.Tk):
         for info in self.device_info:
             panel_controls_device_info_panel_content_table.insert(parent = '', index=info_index, values=info)
             info_index += 1
+        
+        # device control
+        panel_controls_device_info_panel_content_control = tk.Frame(self.panel_controls_device_info_panel_content,
+                                                                    border=4,
+                                                                    width=self.panel_controls_device_info_panel_content_width,
+                                                                    relief="flat",
+                                                                    borderwidth=0)
+        panel_controls_device_info_panel_content_control.pack(
+            side="top", fill='x', expand=True)
+
+        for control in self.device_control:
+            button = tk.Button(panel_controls_device_info_panel_content_control,
+                               cursor="hand2",
+                               text=control[0],
+                               width=10,
+                               padx=1,
+                               command=lambda x=control[0]: self.homeController.deviceControl(x))
+            button.pack(side="right", fill="both", expand=True)
 
     # application info panel in controls device panel
     def _make_panel_controls_application_info_panel(self):
@@ -413,6 +438,7 @@ class HomeView(tk.Tk):
     def update_devices_list(self, new_devices_list=None):
         self.display_device_info()
         if new_devices_list is not None:
+            # self.devices_data.clear()
             self.devices_data = new_devices_list
         self.panel_devices_list_inner_frame.destroy()
         self._make_panel_devices_list_content()
